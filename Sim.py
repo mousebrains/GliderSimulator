@@ -22,7 +22,6 @@ def addArgs(parser:ArgumentParser):
     grp.add_argument('--glider', type=str, required=True, help='Glider config JSON')
     grp.add_argument('--energy', type=str, help='Glider energy config JSON')
     grp.add_argument('--waypoints', type=str, required=True, help='Waypoints to fly JSON')
-    grp.add_argument('--mission', type=str, required=True, help='Define mission to fly JSON')
     grp.add_argument('--current', type=str, help='Define current to fly through JSON')
 
     grp.add_argument('--wind', type=str, help='Define surface wind to operate in JSON')
@@ -63,7 +62,6 @@ class Simulate: # A simulation
         self.glider = SimParams.Glider(args.glider, self.logger, args.outdir)
         self.energy = SimParams.Energy(args.energy, self.logger, args.outdir)
         self.waypoints = SimParams.Waypoints(args.waypoints, self.logger, args.outdir)
-        self.mission = SimParams.Mission(args.mission, self.logger, args.outdir)
         self.current = SimParams.Drift(args.current, self.logger, args.outdir)
         self.wind = SimParams.Drift(args.wind, self.logger, args.outdir)
         self.tMax = args.maxDuration * 86400 # Maximum deployment duration length

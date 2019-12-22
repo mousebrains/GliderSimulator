@@ -210,10 +210,6 @@ class Waypoints(BaseParam):
         return wpt
 
 
-class Mission(BaseParam):
-    def __init__(self, fn:str, logger:Logger, outdir:str) -> None:
-        BaseParam.__init__(self, fn, logger, outdir)
-
 class Drift(BaseParam): # For both wind and current
     def __init__(self, fn:str, logger:Logger, outdir:str) -> None:
         BaseParam.__init__(self, fn, logger, outdir)

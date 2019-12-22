@@ -1,0 +1,11 @@
+{
+	"comment": "Define how wind acts on glider at the surface",
+	"comment": "speedLL is the speed in the lower left corner",
+	"comment": "slopes are m/sec/deg change from speedLL",
+	"normalization": 0.00, "comment": "Fraction of wind speed glider feels",
+	"speed": [
+		{"latLimits": [10, 20], "lonLimits": [107, 120], 
+			"speedLL": 10, "latSlope": 0, "lonSlope": 0, 
+			"direction": 180}
+	]
+}

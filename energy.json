@@ -1,0 +1,13 @@
+{
+	"battery_full_charge": 3381, "comment": "Watt-Hours",
+	"available_fraction": 0.9, "comment": "Fraction of batteryFullCharge",
+	"deep_buoyancy_per_CC": 0.1, "comment": "Joules/CC of buoyancy change at depth",
+	"shallow_buoyancy_per_CC": 0.1, "comment": "Joules/CC of buoyancy change at top",
+	"battery_shift": 0.1, "comment": "Joules to move battery/inflection",
+	"battery_surface": 0.2, "comment": "Joules to move battery to the surface position",
+	"air_pump": 0.1, "comment": "Joules to run the air pump/surfacing",
+	"iridium": 0.1, "comment": "Watts for an iridium call",
+	"surface": 0.1, "comment": "base Watts while at the surface",
+	"diving": 0.1, "comment": "base Watts while diving",
+	"climbing": 0.1, "comment": "base Watts while climbing"
+}

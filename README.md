@@ -12,20 +12,20 @@ The simulator is controlled by a set of JSON files, whose names are specified on
  5) wind.json defines the wind the glider encounters on the surface
 
 The simulation is pretty detailed:
- #) Surface with the following included:
-   .) Inflate the air bladder
-   .) Get an initial GPS fix
-   .) Iridium call setup
-   .) Iridium data transfer (time dependent on previous dive duration)
-   .) Iridium call take down
-   .) Get final GPS fix
-   .) Deflate the air bladder
-   .) Adjust the position due to the winds
- #) Dive, normal climb, and climb to surface
-   .) Dive speed specified in JSON file
-   .) Horizontal speed is determined by Wg / tan(pitch + angleOfAttack)
-   .) The bottom depth comes from bathymetry information. I use GEBCO.
-   .) Dive time and distance are calculated.
-   .) The dive time includes the inflection upwards at the bottom.
-   .) A check is run to see if a waypoint was passed. If so then the glider advances to the next waypoint.
-   .) A new location is estimated based on distance, heading, and currents.
+ 1) Surface with the following included:
+    1) Inflate the air bladder
+    1) Get an initial GPS fix
+    1) Iridium call setup
+    1) Iridium data transfer (time dependent on previous dive duration)
+    1) Iridium call take down
+    1) Get final GPS fix
+    1) Deflate the air bladder
+    1) Adjust the position due to the winds
+ 2) Dive, normal climb, and climb to surface
+    1) Dive speed specified in JSON file
+    1) Horizontal speed is determined by Wg / tan(pitch + angleOfAttack)
+    1) The bottom depth comes from bathymetry information. I use GEBCO.
+    1) Dive time and distance are calculated.
+    1) The dive time includes the inflection upwards at the bottom.
+    1) A check is run to see if a waypoint was passed. If so then the glider advances to the next waypoint.
+    1) A new location is estimated based on distance, heading, and currents.

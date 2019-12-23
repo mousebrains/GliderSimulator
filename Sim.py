@@ -159,7 +159,7 @@ class Simulate: # A simulation
         """ I'm at the surface """
         self.__calcWaterVelocities()
 
-        (dtSurf, dtCall) = self.glider.surfaceTime(self.tLastSurface)
+        (dtSurf, dtCall) = self.glider.surfaceTime(self.t - self.tLastSurface)
         self.t += dtSurf
         self.tLastSurface = self.t # For an estimate of data and water velocities
         self.tNextSurfacing = self.glider.nextSurfacingTime(self.t, self.tNextSurfacing)
@@ -194,11 +194,15 @@ class Simulate: # A simulation
         dtMax = max(0, self.tNextSurfacing - self.t) # How long until next surfacing triggered
         (dt, dist, volume, eDepth) = self.glider.diveTime(self.depth, depth, dtMax)
 
+        if (self.t + dt) >= self.tNextSurfacing: # Check if I need to surface before I finish
+            self.logger.debug('Aborting dive depth=%s eDepth=%s', self.depth, eDepth)
+            nxtState = 'climbSurface'
+
         # Check if I am going to hit a waypoint
         distCheck = self.__checkForWaypoint(dt, dist)
         if distCheck is not None:
             dtMax = dt * (distCheck / dist) # How much time for this action
-            (dt, dist, volume, eDepth) = self.glider.diveTime(self.depth, dtMax)
+            (dt, dist, volume, eDepth) = self.glider.diveTime(self.depth, depth, dtMax)
             nxtState = self.state
 
         self.__adjustPosition(dt, dist) # Change the lat/lon by the distance traveled
@@ -208,10 +212,6 @@ class Simulate: # A simulation
 
         self.__adjustState(dt, dist, volume, eDepth, 
                 self.energy.dive(dt, abs(self.volume - volume)))
-
-        if (self.t + dt) >= self.tNextSurfacing:
-            self.logger.debug('Aborting dive depth=%s eDepth=%s', self.depth, eDepth)
-            nxtState = 'climbSurface'
 
         if distCheck is not None: # Advance the waypoint
             self.wpt = self.waypoints.next()
@@ -225,6 +225,10 @@ class Simulate: # A simulation
 
         dtMax = max(0, self.tNextSurfacing - self.t) # How long until next surfacing triggered
         (dt, dist, volume, eDepth) = self.glider.climbTime(self.depth, dtMax)
+
+        if ((self.t + dt) >= self.tNextSurfacing) or (self.nYos >= self.nYosBetweenSurfacings):
+            self.logger.debug('Aborting climb depth=%s eDepth=%s', self.depth, eDepth)
+            nxtState = 'climbSurface'
 
         # Check if I am going to hit a waypoint
         distCheck = self.__checkForWaypoint(dt, dist)
@@ -242,9 +246,6 @@ class Simulate: # A simulation
 
         self.__adjustState(dt, dist, volume, eDepth,
                 self.energy.climb(dt, abs(self.volume - volume)))
-
-        if ((self.t + dt) >= self.tNextSurfacing) or (self.nYos >= self.nYosBetweenSurfacings):
-            self.logger.debug('Aborting climb depth=%s eDepth=%s', self.depth, eDepth)
 
         if distCheck is not None: # Advance the waypoint
             self.wpt = self.waypoints.next()
@@ -333,8 +334,8 @@ class Simulate: # A simulation
 
         (latC, lonC, distC) = self.__closestApproach(lat0, lon0, lat1, lon1, latWpt, lonWpt)
 
-        # self.logger.info('CLS wpt %s %s C %s %s %s',
-        #         latWpt, lonWpt, round(latC, 6), round(lonC, 6), round(distC, 1))
+        self.logger.info('CLS wpt %s %s C %s %s %s',
+                latWpt, lonWpt, round(latC, 6), round(lonC, 6), round(distC, 1))
 
         if distC >= self.waypointRadius: return None # Still too far
 

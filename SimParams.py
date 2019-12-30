@@ -34,6 +34,7 @@ class Glider(BaseParam):
                     + self.info['surface_call_drop_time'] \
                     + self.info['surface_post_gps_time'] \
                     + self.info['surface_deflate_time']
+            logger.info('Surface affine duration %s', self.surface_affine);
 
     def currentUseCorrection(self) -> bool:
         return False if self.info is None else self.info['current_use_correction']
@@ -67,9 +68,6 @@ class Glider(BaseParam):
         denom = W_climb + W_dive
         return num / denom
 
-
-        
-
     def nextSurfacingTime(self, tNow:float, tNext:float) -> float:
         """ When should the next surfacing time be """
         if self.info is None:
@@ -92,7 +90,10 @@ class Glider(BaseParam):
     def surfaceTime(self, dt:float) -> float:
         """ How long was the total surface time """
         if self.info is None: return 0
-        callTime = (dt / 60) * self.info['surface_call_time_per_minute']
+        callTime = max( \
+                self.info['iridium_call_time_max'], \
+                self.info['iridium_call_time_constant'] \
+                + self.info['iridium_call_time_slope'] * dt)
         return (self.surface_affine + callTime, callTime)
 
     def diveTime(self, sDepth:float, bathDepth:float, dtMax:float) -> float:
@@ -168,26 +169,25 @@ class Energy(BaseParam):
         if self._charge is not None: self._charge -= delta
         return self
 
-    def surface(self, dtSurface:float, dtCall:float) -> float:
+    def surface(self, dtCall:float) -> float:
         """ dtSurface is the time at the surface, and dtCall is the iridium call duration """
         return 0 if self.info is None else \
-                self.info['air_pump'] \
-                + 2 * self.info['battery_surface'] \
-                + self.info['surface'] * dtSurface \
-                + self.info['iridium'] * dtCall
+                self.info['surfaceConstant'] + self.info['surfaceSlope'] * dtCall
 
-    def dive(self, dt:float, dVol:float) -> float:
+    def dive(self, dt:float, dVol:float, depth:float) -> float:
         """ dt is the dive duration, dVol is the buoyancy throw """
         return 0 if self.info is None else \
                 self.info['battery_shift'] \
-                + self.info['deep_buoyancy_per_CC'] * dVol \
+                + self.info['oil_out_slope0'] * dVol \
+                + self.info['oil_out_slope1'] * dVol * depth \
                 + self.info['diving'] * dt
 
-    def climb(self, dt:float, dVol:float) -> float:
+    def climb(self, dt:float, dVol:float, depth:float) -> float:
         """ dt is the climb duration, dVol is the buoyancy throw """
         return 0 if self.info is None else \
                 self.info['battery_shift'] \
-                + self.info['shallow_buoyancy_per_CC'] * dVol \
+                + self.info['oil_in_slope0'] * dVol \
+                + self.info['oil_in_slope1'] * dVol * depth \
                 + self.info['climbing'] * dt
 
 class Waypoints(BaseParam):

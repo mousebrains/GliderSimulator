@@ -37,6 +37,8 @@ def runSimulation(args:ArgumentParser, logger:Logger) -> None:
     while sim: # Keep on running
         sim.step() # Step to the next state
 
+    logger.info('Exited because %s, ran for %s', sim.reason, sim.time2string());
+
     sim.close() # Clean up
 
 class Simulate: # A simulation
@@ -44,15 +46,26 @@ class Simulate: # A simulation
         self.args = args
         self.logger = logger
         self.dem = DEM.DEM(args.dem)
+        self.reason = None
+        self.t = 0
         self.__initialize(args)
         self.__dataFP = None
 
     def __bool__(self) -> bool:
         """ Can the simulation continue or not, i.e. time and energy left """
-        return bool(self.t < self.tMax) \
-                and (self.state != 'done') \
-                and bool(self.energy) \
-                and (self.totalYos < self.maxYos)
+        if self.t >= self.tMax:
+            self.reason = 'I reached the maximum time'
+            return False
+        if self.state == 'done':
+            self.reason = 'the state was done'
+            return False
+        if not bool(self.energy):
+            self.reason = 'I Ran out of energy'
+            return False
+        if self.totalYos >= self.maxYos:
+            self.reason = 'I reached the maximum Yos'
+            return False
+        return True
 
     def __initialize(self, args:ArgumentParser) -> None: 
         """ Set up the initial data structures """
@@ -128,7 +141,7 @@ class Simulate: # A simulation
                 + ',' + str(self.energy) \
                 + "\n")
 
-    def __time2string(self) -> str:
+    def time2string(self) -> str:
         t = self.t
         days = math.floor(t / 86400)
         hours = math.floor((t % 86400) / 3600)
@@ -140,7 +153,7 @@ class Simulate: # A simulation
     def step(self) -> None: # Walk to the next step
         self.logger.info('STEP state=%s t=%s energy=%s volume=%s depth=%s lat=%s lon=%s', 
                 self.state,
-                self.__time2string(),
+                self.time2string(),
                 self.energy, 
                 self.volume, round(self.depth, 1),
                 round(self.lat,6), round(self.lon,6))
@@ -164,7 +177,7 @@ class Simulate: # A simulation
         self.tLastSurface = self.t # For an estimate of data and water velocities
         self.tNextSurfacing = self.glider.nextSurfacingTime(self.t, self.tNextSurfacing)
         self.nYos = 0 # Reset number of yos since the last surfacing
-        dE = self.energy.surface(dtSurf, dtCall)
+        dE = self.energy.surface(dtCall)
         self.energy -= dE
 
         # Drift due to the wind
@@ -211,7 +224,7 @@ class Simulate: # A simulation
                 round(self.t,1), round(dt,1), round(dist,1), round(eDepth,1))
 
         self.__adjustState(dt, dist, volume, eDepth, 
-                self.energy.dive(dt, abs(self.volume - volume)))
+                self.energy.dive(dt, self.volume - volume, eDepth))
 
         if distCheck is not None: # Advance the waypoint
             self.wpt = self.waypoints.next()
@@ -245,7 +258,7 @@ class Simulate: # A simulation
                 round(dist,1), self.nYos)
 
         self.__adjustState(dt, dist, volume, eDepth,
-                self.energy.climb(dt, abs(self.volume - volume)))
+                self.energy.climb(dt, self.volume - volume, eDepth))
 
         if distCheck is not None: # Advance the waypoint
             self.wpt = self.waypoints.next()
@@ -272,7 +285,7 @@ class Simulate: # A simulation
                 round(dt,1), round(eDepth,1), round(dist,1))
 
         self.__adjustState(dt, dist, volume, eDepth, 
-                self.energy.climb(dt, abs(self.volume - volume)))
+                self.energy.climb(dt, self.volume - volume, eDepth))
 
         if distCheck is not None: # Advance the waypoint
             self.wpt = self.waypoints.next()
